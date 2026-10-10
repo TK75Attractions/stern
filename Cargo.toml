@@ -12,8 +12,8 @@ stern = { path = "./stern" }
 stern-macros = { path = "./stern_macros" }
 
 # slint
-slint = { git = "https://github.com/taichi765/slint" }
-i-slint-backend-testing = { git = "https://github.com/taichi765/slint" }
+slint = { git = "https://github.com/Tk75Attractions/slint" }
+i-slint-backend-testing = { git = "https://github.com/Tk75Attractions/slint" }
 
 # utilities
 thiserror = "2.0.18"
