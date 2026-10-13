@@ -158,6 +158,12 @@ where
         ))))
     }
 
+    /// Executes `f` with the current route.
+    pub fn with_current<Ret>(&self, f: impl FnOnce(&R) -> Ret) -> Ret {
+        let inner = self.0.borrow();
+        f(&inner.current)
+    }
+
     /// Navigates to the specified route. The function needs to be called from the thread running slint event loop, if `route_property_setter`
     /// passed in [`NavController::new()`] calls any slint function.
     pub fn navigate(&self, route: R) {
@@ -184,6 +190,7 @@ where
 
 struct NavControllerInner<R: RouteEnum> {
     route_property_setter: Box<dyn Fn(R::SlintKind)>,
+    current: R,
     #[allow(clippy::type_complexity)]
     on_navigate: Option<Box<dyn FnMut(&R)>>,
 }
@@ -215,10 +222,11 @@ where
         F: Fn(R::SlintKind) + 'static,
     {
         // FIXME: このタイミングでは`NavHost.on_navigate()`が呼ばれない
-        let kind: R::Kind = default_route.into();
+        let kind: R::Kind = R::Kind::from(&default_route);
         route_property_setter(kind.into());
         Self {
             on_navigate: None,
+            current: default_route,
             route_property_setter: Box::new(route_property_setter),
         }
     }
@@ -229,7 +237,8 @@ where
             (on_navigate.as_mut())(&route);
         }
 
-        let kind: R::Kind = route.into();
+        self.current = route;
+        let kind: R::Kind = R::Kind::from(&self.current);
         let ui_route: R::SlintKind = kind.into();
         (self.route_property_setter)(ui_route);
     }
