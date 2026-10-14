@@ -7,7 +7,7 @@
 
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     fmt::Debug,
     hash::Hash,
     rc::Rc,
@@ -170,6 +170,11 @@ where
         self.0.borrow_mut().navigate(route);
     }
 
+    /// Moves back to the previous route.
+    pub fn move_back(&self) {
+        self.0.borrow_mut().move_back();
+    }
+
     fn subscribe_on_navigate<F>(&self, f: F)
     where
         F: FnMut(&R) + 'static,
@@ -193,6 +198,7 @@ struct NavControllerInner<R: RouteEnum> {
     current: R,
     #[allow(clippy::type_complexity)]
     on_navigate: Option<Box<dyn FnMut(&R)>>,
+    route_stack: VecDeque<R>,
 }
 
 impl<R> Debug for NavControllerInner<R>
@@ -228,6 +234,7 @@ where
             on_navigate: None,
             current: default_route,
             route_property_setter: Box::new(route_property_setter),
+            route_stack: VecDeque::new(),
         }
     }
 
@@ -237,10 +244,18 @@ where
             (on_navigate.as_mut())(&route);
         }
 
-        self.current = route;
+        let prev = std::mem::replace(&mut self.current, route);
+        self.route_stack.push_back(prev);
         let kind: R::Kind = R::Kind::from(&self.current);
         let ui_route: R::SlintKind = kind.into();
         (self.route_property_setter)(ui_route);
+    }
+
+    fn move_back(&mut self) {
+        let prev = self.route_stack.pop_back();
+        if let Some(prev) = prev {
+            self.navigate(prev);
+        }
     }
 
     fn subscribe_on_navigate<F>(&mut self, f: F)
