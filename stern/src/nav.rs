@@ -255,7 +255,7 @@ where
         trace!("moving back");
         let prev = self.route_stack.pop_back();
 
-        let Some(prev) = dbg!(prev) else {
+        let Some(prev) = prev else {
             return None;
         };
 
@@ -267,7 +267,7 @@ where
         let kind: R::Kind = R::Kind::from(&self.current);
         let ui_route: R::SlintKind = kind.into();
         (self.route_property_setter)(ui_route);
-        Some(dbg!(current))
+        Some(current)
     }
 
     fn subscribe_on_navigate<F>(&mut self, f: F)
